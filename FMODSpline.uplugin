@@ -1,0 +1,29 @@
+﻿{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "FMOD Spline",
+  "Description": "A powerful tool for FMOD's Unreal Integration that adds a spline actor that can be used for creating immersive environments",
+  "Category": "Other",
+  "CreatedBy": "Adrien Lucas",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "FMODSpline",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name" : "FMODStudio",
+      "Enabled": true
+    }
+  ]
+}
