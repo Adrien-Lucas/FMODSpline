@@ -63,8 +63,19 @@ void AFMODSpline::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-	//Sets Player location
-	PlayerLocation = GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation();
+	//Sets Player location if exists
+	if(APlayerController* PC =GetWorld()->GetFirstPlayerController(); GetWorld() && IsValid(PC))
+	{
+		if(APawn* Pawn = PC->GetPawn(); IsValid(Pawn))
+		{
+			PlayerLocation = Pawn->GetActorLocation();
+		}
+		else
+			return;
+	}
+	else
+		return;
+	
 	
 	//Disable the system if too far away from the player
 	if(IsPlayerTooFar())
