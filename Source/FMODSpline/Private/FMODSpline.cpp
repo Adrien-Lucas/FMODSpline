@@ -1,5 +1,6 @@
 ﻿#include "FMODSpline.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AFMODSpline::AFMODSpline()
 {
@@ -46,7 +47,7 @@ FVector AFMODSpline::GetRandomLocationInSplineShape(int iteration)
     RandomLocation.Y = FMath::FRandRange(BoundsCenter.Y - SplineBoundsRadius, BoundsCenter.Y + SplineBoundsRadius);
     RandomLocation.Z = FMath::FRandRange(BoundsCenter.Z - CylinderHeight / 2.0f, BoundsCenter.Z + CylinderHeight / 2.0f);
 
-	if(!IsPointInsideSplineShape(RandomLocation) || FVector::Dist(RandomLocation, PlayerLocation) <= MinRandomSoundDistance)
+	if(!IsPointInsideSplineShape(RandomLocation) || FVector::Dist(RandomLocation, ListenerTransform.GetLocation()) <= MinRandomSoundDistance)
     {
 		// If too many iterations, stops searching
     	if(iteration > 25)
@@ -63,26 +64,28 @@ void AFMODSpline::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-	//Sets Player location if exists
+	//Sets Listener location
 	if(APlayerController* PC =GetWorld()->GetFirstPlayerController(); GetWorld() && IsValid(PC))
 	{
-		if(APawn* Pawn = PC->GetPawn(); IsValid(Pawn))
-		{
-			PlayerLocation = Pawn->GetActorLocation();
-		}
-		else
-			return;
+		FVector ListenerPosition;
+		FVector ListenerForward;
+		FVector ListenerRight;
+		PC->GetAudioListenerPosition(ListenerPosition, ListenerForward, ListenerRight);
+
+		const FRotator Rotator = UKismetMathLibrary::MakeRotFromXY(ListenerForward, ListenerRight);
+
+		ListenerTransform = FTransform(Rotator, ListenerPosition);
 	}
 	else
 		return;
 	
 	
 	//Disable the system if too far away from the player
-	if(IsPlayerTooFar())
+	if(IsListenerTooFar())
 		return;
 
     // Update the FMOD audio component's position
-    UpdateFMODAudioComponentPosition(PlayerLocation);
+    UpdateFMODAudioComponentPosition(ListenerTransform.GetLocation());
 
 	// Plays random sounds if the player is close enough and the sound is delayed already
     for(FRandomSound& RandomSound : RandomSounds)
@@ -99,7 +102,7 @@ void AFMODSpline::Tick(float DeltaTime)
 					RandomSound.EventInstance.Instance->release();
 				}
 
-				if(IsPlayerTooFar())
+				if(IsListenerTooFar())
 					return;
 
 				//Finds a random location contained within the spline shape
@@ -128,48 +131,49 @@ void AFMODSpline::Tick(float DeltaTime)
 }
 
 // Returns if the player is too far
-bool AFMODSpline::IsPlayerTooFar() const
+bool AFMODSpline::IsListenerTooFar() const
 {
-	return FVector::Dist(PlayerLocation, BoundsCenter) > MaxDistance;
+	return FVector::Dist(ListenerTransform.GetLocation(), BoundsCenter) > MaxDistance;
 }
 
-void AFMODSpline::UpdateFMODAudioComponentPosition(const FVector& PlayerPosition)
+void AFMODSpline::UpdateFMODAudioComponentPosition(const FVector& ListenerPosition)
 {
 	// Check if the player is inside the shape defined by the spline points
-	const bool bPlayerInsideShape = IsPointInsideSplineShape(PlayerPosition);
+	const bool bListenerInsideShape = IsPointInsideSplineShape(ListenerPosition);
 	FVector NewLocation;
 	
 	// Get the closest point on the spline to the player's position
-	const FVector ClosestPoint = Spline->FindLocationClosestToWorldLocation(PlayerPosition, ESplineCoordinateSpace::World);
+	const FVector ClosestPoint = Spline->FindLocationClosestToWorldLocation(ListenerPosition, ESplineCoordinateSpace::World);
 	
 
 	bool bInCylinder = false;
 	// 2D distance between player position and the bounds center
-	const float HorizontalDistance = FVector2D::Distance(FVector2D(PlayerPosition), FVector2D(BoundsCenter));
-	const float VerticalDistance = abs(PlayerPosition.Z - BoundsCenter.Z);
+	const float HorizontalDistance = FVector2D::Distance(FVector2D(ListenerPosition), FVector2D(BoundsCenter));
+	const float VerticalDistance = abs(ListenerPosition.Z - BoundsCenter.Z);
 
 	bInCylinder = HorizontalDistance < SplineBoundsRadius && VerticalDistance < CylinderHeight / 2.0f;
 	
 	// If the player is inside the shape and the spline is closed, set the FMOD audio component's position to the player's position
-	if (bPlayerInsideShape && Spline->IsClosedLoop() && bInCylinder)
+	if (bListenerInsideShape && Spline->IsClosedLoop() && bInCylinder)
 	{
-		NewLocation = PlayerPosition;
-
+		NewLocation = ListenerTransform.GetLocation();
+		FMODAudioComponent->SetWorldRotation(ListenerTransform.GetRotation());
+		
 		//If the player just entered the spline shape, plays the FMOD event
-		if (!bPlayerInsideSplineShape)
+		if (!bListenerInsideSplineShape)
 		{
 			//Plays fmod reverb and mix event
 			if(FMODReverbEvent)
 				FMODReverbEventInstance = UFMODBlueprintStatics::PlayEvent2D(GetWorld(), FMODReverbEvent, true);
 			if(FMODMixEvent)
 				FMODMixEventInstance = UFMODBlueprintStatics::PlayEvent2D(GetWorld(), FMODMixEvent, true);
-			bPlayerInsideSplineShape = true;
+			bListenerInsideSplineShape = true;
 		}
 	}
 	else
 	{
 		// If the player just exited the spline shape, stops the FMOD event
-		if (bPlayerInsideSplineShape)
+		if (bListenerInsideSplineShape)
 		{
 			//Stops fmod reverb and mix event
 			FMODReverbEventInstance.Instance->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT);
@@ -179,7 +183,7 @@ void AFMODSpline::UpdateFMODAudioComponentPosition(const FVector& PlayerPosition
 			FMODReverbEventInstance.Instance->release();
 			FMODMixEventInstance.Instance->release();
 			
-			bPlayerInsideSplineShape = false;
+			bListenerInsideSplineShape = false;
 		}
 	
 		

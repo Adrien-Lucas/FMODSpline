@@ -107,7 +107,7 @@ public:
 
 	// The height of the cylinder
 	UPROPERTY(EditAnywhere, Category = "Config")
-	float CylinderHeight = 100.0f;
+	float CylinderHeight = 500.0f;
 
 	// The max distance of the system
 	UPROPERTY(EditAnywhere, Category = "Config")
@@ -147,10 +147,10 @@ private:
 	FVector BoundsCenter;
 	
 	UPROPERTY()
-	FVector PlayerLocation;
+	FTransform ListenerTransform;
 	
 	UPROPERTY()
-	bool bPlayerInsideSplineShape;
+	bool bListenerInsideSplineShape;
 
 	// The instance of FMODMixEvent
 	UPROPERTY()
@@ -167,11 +167,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector GetRandomLocationInSplineShape(int iteration);
-	bool IsPlayerTooFar() const;
+	bool IsListenerTooFar() const;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void UpdateFMODAudioComponentPosition(const FVector& PlayerPosition);
+	void UpdateFMODAudioComponentPosition(const FVector& ListenerPosition);
 	bool IsPointInsideSplineShape(const FVector& Point) const;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	void GetSplineBounds(float& OutRadius, FVector& OutCenter) const;

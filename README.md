@@ -34,7 +34,7 @@ You can create a FMOD Spline by
 
 ![SimpleAudioSpline](https://user-images.githubusercontent.com/16429096/207062885-fd1d343c-ebe2-453d-99a4-a17a02227fb5.png)
 
-When making a non closed spline, the FMOD Event will try to be the closest as possible from the player on the Spline
+When making a non closed spline, the FMOD Event will try to be the closest as possible from the listener on the Spline
 
 #### Parameters
 
@@ -46,7 +46,7 @@ When making a non closed spline, the FMOD Event will try to be the closest as po
 
 ![Simple Audio Volume](https://user-images.githubusercontent.com/16429096/207062883-ca603f7f-4c1c-4755-82c1-446d8bc71ed3.png)
 
-When making a closed spline, the FMOD Event will be at the closest point on the spline from the player when they are outside, but will stick to the player's position when they are inside of the shape defined by the spline, simulating a 2D sound.
+When making a closed spline, the FMOD Event will be at the closest point on the spline from the listener when they are outside, but will stick to the listener's position when they are inside of the shape defined by the spline, simulating a 2D sound.
 
 #### Parameters
 
@@ -56,7 +56,7 @@ When making a closed spline, the FMOD Event will be at the closest point on the 
 
 [FMODMixEvent] The mix event you want to play when entering the volume.
 
-[Cylinder height] The height limit of the volume, if the player is not in the cylinder, they wont have the "2D Sound simulation".
+[Cylinder height] The height limit of the volume, if the listener is not in the cylinder, they wont have the "2D Sound simulation".
 
 ### Openings
 
@@ -82,7 +82,7 @@ Note : Openings works for simple audio splines too
 
 ![RandomSounds](https://user-images.githubusercontent.com/16429096/207062880-22623b20-c424-4615-9512-09a9a5aabf2f.png)
 
-Random sounds will play at the random intervals you gave, inside of the volume. If possible, they will avoid to spawn too close from the player.
+Random sounds will play at the random intervals you gave, inside of the volume. If possible, they will avoid to spawn too close from the listener.
 
 ### Parameters 
 
@@ -94,7 +94,7 @@ Random sounds will play at the random intervals you gave, inside of the volume. 
 	
 	Delay range defines MinDelay and MaxDelay between two similar spawns of this sound.
 	
-[MinRandomSoundDistance] The safe distance random sounds will try to respect when spawning near from the player. This prevents the player from noticing a very close spatialized sound where there is nothing in the game space.
+[MinRandomSoundDistance] The safe distance random sounds will try to respect when spawning near from the listener. This prevents the listener from noticing a very close spatialized sound where there is nothing in the game space.
 
 ### Global Parameters
 ![image](https://user-images.githubusercontent.com/16429096/207068139-db8b6623-ac85-4f23-bc97-c70121453238.png)
